@@ -24,6 +24,7 @@ resource linkapi 'Microsoft.Web/staticSites/linkedBackends@2022-09-01' = {
   name: 'api'
   properties: {
     backendResourceId: backendResourceId
+    region: location
   }
 }
 output name string = frontend.name
