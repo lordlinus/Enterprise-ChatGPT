@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+  
+    {
+      "name": "Attach to Python Functions",
+      "type": "python",
+      "request": "attach",
+      "port": 9091,
+      "preLaunchTask": "func: host start"
+    },
+    {
+      "name": "Frontend: watch",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/app/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+          "run-script",
+          "watch"
+      ],
+      "console": "integratedTerminal",
+  },
+  {
+      "name": "Frontend: build",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/app/frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+          "run-script",
+          "build"
+      ],
+      "console": "integratedTerminal",
+  }
+  ],
+  "inputs": [
+    {
+      "id": "dotEnvFilePath",
+      "type": "command",
+      "command": "azure-dev.commands.getDotEnvFilePath"
+  }
+  ]
+}
