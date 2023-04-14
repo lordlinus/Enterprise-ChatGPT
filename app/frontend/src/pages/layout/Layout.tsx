@@ -1,6 +1,6 @@
 import { Outlet, NavLink, Link } from "react-router-dom";
 
-import github from "../../assets/react.svg";
+import github from "../../assets/github.svg";
 
 import styles from "./Layout.module.css";
 
@@ -30,7 +30,7 @@ const Layout = () => {
                                 </NavLink>
                             </li>
                             <li className={styles.headerNavLeftMargin}>
-                                <a href="https://aka.ms/entgptsearch" target={"_blank"} title="Github repository link">
+                                <a href="https://github.com/lordlinus/Enterprise-ChatGPT" target={"_blank"} title="Github repository link">
                                     <img
                                         src={github}
                                         alt="Github logo"
