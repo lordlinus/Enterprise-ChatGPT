@@ -2,7 +2,7 @@
 
 This demo is based on [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo) and using static web app for frontend and Azure functions for the backend API's.
 
-In addition to the features [azure-search-openai-demo feature](https://github.com/Azure-Samples/azure-search-openai-demo#features) additonal features include:
+In addition to [azure-search-openai-demo feature](https://github.com/Azure-Samples/azure-search-openai-demo#features) features this repo includes:
 
 - Ability to upload file from UI
 
