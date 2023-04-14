@@ -8,7 +8,7 @@ import time
 
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
-from azure.identity import AzureDeveloperCliCredential, DefaultAzureCredential
+from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (
@@ -38,7 +38,8 @@ verbose = os.environ.get("VERBOSE_BOOL") or True
 category = os.environ.get("CATEGORY") or "default"
 
 # Use the current user identity to connect to Azure services unless a key is explicitly set for any of them
-azd_credential = AzureDeveloperCliCredential() if tenantid == None else AzureDeveloperCliCredential(tenant_id=tenantid)
+azd_credential = DefaultAzureCredential()
+# azd_credential = AzureDeveloperCliCredential() if tenantid == None else AzureDeveloperCliCredential(tenant_id=tenantid)
 default_creds = azd_credential if searchkey == None or storagekey == None else None
 search_creds = default_creds if searchkey == None else AzureKeyCredential(searchkey)
 # storage_creds = default_creds if storagekey == None else AzureKeyCredential(storagekey)
