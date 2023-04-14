@@ -1,8 +1,8 @@
 # ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search
 
-This demo is based on [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo) and using static web app for frontend and Azure functions for the backend API's. Current features [azure-search-openai-demo feature](https://github.com/Azure-Samples/azure-search-openai-demo#features)
+This demo is based on [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo) and using static web app for frontend and Azure functions for the backend API's.
 
-Additonal features include:
+In addition to the features [azure-search-openai-demo feature](https://github.com/Azure-Samples/azure-search-openai-demo#features) additonal features include:
 
 - Ability to upload file from UI
 
@@ -10,6 +10,8 @@ Additonal features include:
 
 - Create Azure functions in different programming language e.g. (C#) and easily replace using config file
 - Static web page by default configured with AAD auth
+
+### High Level Overview of components
 
 <img src="docs/appcomponents.png" width="600">
 
@@ -84,3 +86,7 @@ Once in the web app:
 - [Revolutionize your Enterprise Data with ChatGPT: Next-gen Apps w/ Azure OpenAI and Cognitive Search](https://aka.ms/entgptsearchblog)
 - [Azure Cognitive Search](https://learn.microsoft.com/azure/search/search-what-is-azure-search)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/cognitive-services/openai/overview)
+
+## How to purge aad auth
+
+To remove your data from Azure Static Web Apps, go to <https://identity.azurestaticapps.net/.auth/purge/aad>
