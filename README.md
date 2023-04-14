@@ -5,13 +5,13 @@ This demo is based on [azure-search-openai-demo](https://github.com/Azure-Sample
 Additonal features include:
 
 - Ability to upload file from UI
+
+<img src="docs/uploadscreen.png" width="600">
+
 - Create Azure functions in different programming language e.g. (C#) and easily replace using config file
 - Static web page by default configured with AAD auth
 
-![RAG Architecture](docs/appcomponents.png)
-
-
-![Upload screen](docs/uploadscreen.png)
+<img src="docs/appcomponents.png" width="600">
 
 ## Getting Started
 
@@ -43,30 +43,27 @@ Additonal features include:
 1. Run `azd init -t enterprise-chatgpt-sandbox`
    - For the target location, the regions that currently support the models used in this sample are **East US** or **South Central US**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
 
-#### Starting from scratch:
+#### Starting from scratch
 
 Execute the following command, if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
 1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
-1. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser.
-
-It will look like the following:
-
-!['Output from running azd up'](assets/endpoint.png)
+2. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser.
+   )
 
 > NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
 
-#### Use existing resources:
+#### Use existing resources
 
 1. Run `azd env set AZURE_OPENAI_SERVICE {Name of existing OpenAI service}`
-1. Run `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
-1. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
-1. Run `azd env set AZURE_OPENAI_GPT_DEPLOYMENT {Name of existing GPT deployment}`. Only needed if your ChatGPT deployment is not the default 'davinci'.
-1. Run `azd up`
+2. Run `azd env set AZURE_OPENAI_RESOURCE_GROUP {Name of existing resource group that OpenAI service is provisioned to}`
+3. Run `azd env set AZURE_OPENAI_CHATGPT_DEPLOYMENT {Name of existing ChatGPT deployment}`. Only needed if your ChatGPT deployment is not the default 'chat'.
+4. Run `azd env set AZURE_OPENAI_GPT_DEPLOYMENT {Name of existing GPT deployment}`. Only needed if your ChatGPT deployment is not the default 'davinci'.
+5. Run `azd up`
 
 > NOTE: You can also use existing Search and Storage Accounts. See `./infra/main.parameters.json` for list of environment variables to pass to `azd env set` to configure those existing resources.
 
-#### Deploying or re-deploying a local clone of the repo:
+#### Deploying or re-deploying a local clone of the repo
 
 - Simply run `azd up`
 
