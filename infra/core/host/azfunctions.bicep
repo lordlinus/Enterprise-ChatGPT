@@ -15,6 +15,7 @@ param azureOpenaigptDeployment string
 param azureSearchService string
 param azureSearchServiceKey string
 param azureSearchIndex string
+param azureStorageContainerName string
 
 // Microsoft.Web/sites/config
 param allowedOrigins array = []
@@ -139,6 +140,14 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         {
           name: 'AZURE_OPENAI_API_KEY'
           value: azureOpenaiServiceKey
+        }
+        {
+          name: 'AZURE_STORAGE_CONTAINER'
+          value: azureStorageContainerName
+        }
+        {
+          name: 'AZURE_STORAGE_ACCOUNT'
+          value: storageAccountName
         }
       ]
       ftpsState: ftpsState

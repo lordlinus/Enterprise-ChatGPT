@@ -200,6 +200,7 @@ module function 'core/host/azfunctions.bicep' = {
     azureSearchIndex: searchIndexName
     azureSearchService: searchService.outputs.name
     azureSearchServiceKey: ''
+    azureStorageContainerName: storageContainerName
     formRecognizerService: formRecognizer.outputs.name
     formRecognizerServiceKey: ''
     runtimeName: 'python'
@@ -319,6 +320,7 @@ output AZURE_OPENAI_SERVICE string = openAi.outputs.name
 output AZURE_OPENAI_RESOURCE_GROUP string = openAiResourceGroup.name
 output AZURE_OPENAI_GPT_DEPLOYMENT string = gptDeploymentName
 output AZURE_OPENAI_CHATGPT_DEPLOYMENT string = chatGptDeploymentName
+output AZURE_OPENAI_LOCATION string = openAi.outputs.location
 
 output AZURE_FORMRECOGNIZER_SERVICE string = formRecognizer.outputs.name
 output AZURE_FORMRECOGNIZER_RESOURCE_GROUP string = formRecognizerResourceGroup.name
