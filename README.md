@@ -33,6 +33,8 @@ In addition to [azure-search-openai-demo feature](https://github.com/Azure-Sampl
 - [Git](https://git-scm.com/downloads)
 - [Powershell 7+ (pwsh)](https://github.com/powershell/powershell) - For Windows users only.
   - **Important**: Ensure you can run `pwsh.exe` from a PowerShell command. If this fails, you likely need to upgrade PowerShell.
+- [Static Web Apps Cli](https://github.com/Azure/static-web-apps-cli#azure-static-web-apps-cli)
+- [Azure Cli](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 
 > NOTE: Your Azure Account must have `Microsoft.Authorization/roleAssignments/write` permissions, such as [User Access Administrator](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#user-access-administrator) or [Owner](https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#owner).
 
@@ -42,18 +44,17 @@ In addition to [azure-search-openai-demo feature](https://github.com/Azure-Sampl
 
 1. Create a new folder and switch to it in the terminal
 1. Run `azd login`
-1. Run `azd init -t enterprise-chatgpt-sandbox`
+1. Run `azd init`
    - For the target location, the regions that currently support the models used in this sample are **East US** or **South Central US**. For an up-to-date list of regions and models, check [here](https://learn.microsoft.com/en-us/azure/cognitive-services/openai/concepts/models)
 
 #### Starting from scratch
 
 Execute the following command, if you don't have any pre-existing Azure services and want to start from a fresh deployment.
 
-1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources, including building the search index based on the files found in the `./data` folder.
+1. Run `azd up` - This will provision Azure resources and deploy this sample to those resources
 2. After the application has been successfully deployed you will see a URL printed to the console. Click that URL to interact with the application in your browser.
-   )
 
-> NOTE: It may take a minute for the application to be fully deployed. If you see a "Python Developer" welcome screen, then wait a minute and refresh the page.
+> NOTE: It may take a minute for the application to be fully deployed.
 
 #### Use existing resources
 
