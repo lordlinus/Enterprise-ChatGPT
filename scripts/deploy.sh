@@ -10,6 +10,15 @@ done <<< "$output"
 
 echo "Environment variables set."
 
+commands=("az" "swa" "func")
+
+for cmd in "${commands[@]}"; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "Error: $cmd command is not available, check pre-requisites in README.md"
+    exit 1
+  fi
+done
+
 az account set --subscription $AZURE_SUBSCRIPTION_ID
 
 cd ./app/frontend
@@ -20,7 +29,12 @@ cd ../backend
 # AZURE_FORM_RECOGNIZER_KEY=$(az cognitiveservices account keys list --name $AZURE_FORMRECOGNIZER_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
 # AZURE_OPENAI_API_KEY=$(az cognitiveservices account keys list --name $AZURE_OPENAI_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
 AZURE_SEARCH_KEY=$(az cognitiveservices account keys list --name $AZURE_SEARCH_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
-az functionapp config appsettings list --name $AZURE_FUNCTION_NAME --resource-group $AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
+if [[ -n $AZURE_SEARCH_KEY ]]; then
+  az functionapp config appsettings list --name $AZURE_FUNCTION_NAME --resource-group $AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
+else
+  echo "AZURE_SEARCH_KEY is empty, not setting it. go to Azure portal and set it manually."
+fi
+
 func azure functionapp publish $AZURE_FUNCTION_NAME
 
 # Purge a deleted resource

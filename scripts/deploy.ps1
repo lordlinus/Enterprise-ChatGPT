@@ -8,6 +8,15 @@ foreach ($line in $output) {
 
 Write-Host "Environment variables set."
 
+$tools = @("az", "swa", "func")
+
+foreach ($tool in $tools) {
+  if (!(Get-Command $tool -ErrorAction SilentlyContinue)) {
+    Write-Host "Error: $tool command line tool is not available, check pre-requisites in README.md"
+    exit 1
+  }
+}
+
 az account set --subscription $env:AZURE_SUBSCRIPTION_ID
 
 cd ./app/frontend
