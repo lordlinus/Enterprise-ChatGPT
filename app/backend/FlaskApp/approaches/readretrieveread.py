@@ -45,7 +45,7 @@ Thought: {agent_scratchpad}"""
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
 
-    def retrieve(self, q: str, overrides: dict) -> any:
+    def retrieve(self, q: str, overrides: dict) -> any: # type: ignore
         use_semantic_captions = True if overrides.get("semantic_captions") else False
         top = overrides.get("top") or 3
         exclude_category = overrides.get("exclude_category") or None
@@ -69,7 +69,7 @@ Thought: {agent_scratchpad}"""
         content = "\n".join(self.results)
         return content
         
-    def run(self, q: str, overrides: dict) -> any:
+    def run(self, q: str, overrides: dict) -> any: # type: ignore
         # Not great to keep this as instance state, won't work with interleaving (e.g. if using async), but keeps the example simple
         self.results = None
 
@@ -86,10 +86,10 @@ Thought: {agent_scratchpad}"""
             prefix=overrides.get("prompt_template_prefix") or self.template_prefix,
             suffix=overrides.get("prompt_template_suffix") or self.template_suffix,
             input_variables = ["input", "agent_scratchpad"])
-        llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
+        llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key) # type: ignore
         chain = LLMChain(llm = llm, prompt = prompt)
         agent_exec = AgentExecutor.from_agent_and_tools(
-            agent = ZeroShotAgent(llm_chain = chain, tools = tools),
+            agent = ZeroShotAgent(llm_chain = chain, tools = tools), # type: ignore
             tools = tools, 
             verbose = True, 
             callback_manager = cb_manager)
@@ -104,9 +104,9 @@ class EmployeeInfoTool(CsvLookupTool):
     employee_name: str = ""
 
     def __init__(self, employee_name: str):
-        super().__init__(filename = "data/employeeinfo.csv", key_field = "name", name = "Employee", description = "useful for answering questions about the employee, their benefits and other personal information") # type: ignore
+        super().__init__(filename = "FlaskApp/data/employeeinfo.csv", key_field = "name", name = "Employee", description = "useful for answering questions about the employee, their benefits and other personal information") # type: ignore
         self.func = self.employee_info
         self.employee_name = employee_name
 
     def employee_info(self, unused: str) -> str:
-        return self.lookup(self.employee_name)
+        return self.lookup(self.employee_name) # type: ignore
