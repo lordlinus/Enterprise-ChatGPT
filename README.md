@@ -91,3 +91,26 @@ Once in the web app:
 ## How to purge aad auth
 
 To remove your data from Azure Static Web Apps, go to <https://identity.azurestaticapps.net/.auth/purge/aad>
+
+## Upload files failures
+
+Currently only PDF docs are supported try to limit to smaller files. Support for large PDF file uploads and other doc version will be added soon
+
+## Azure functions troubleshooting
+
+Enable application insights and check if you have all the required settings configured correctly
+
+- AZURE_FORM_RECOGNIZER_SERVICE
+- AZURE_OPENAI_CHATGPT_DEPLOYMENT
+- AZURE_OPENAI_GPT_DEPLOYMENT
+- AZURE_OPENAI_SERVICE
+- AZURE_SEARCH_INDEX
+- AZURE_SEARCH_KEY
+- AZURE_SEARCH_SERVICE
+- AZURE_STORAGE_ACCOUNT
+- AZURE_STORAGE_CONTAINER
+- AzureWebJobsStorage
+- ENABLE_ORYX_BUILD
+- FUNCTIONS_EXTENSION_VERSION
+- FUNCTIONS_WORKER_RUNTIME
+- SCM_DO_BUILD_DURING_DEPLOYMENT
