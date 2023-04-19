@@ -12,3 +12,4 @@ azure-storage-blob==12.14.1
 azure-ai-formrecognizer==3.2.1
 pypdf==3.5.0
 python-magic==0.4.27
+pandas==2.0.0
