@@ -7,44 +7,48 @@ import sys
 import time
 
 from azure.ai.formrecognizer import DocumentAnalysisClient
-from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
 from azure.search.documents.indexes import SearchIndexClient
-from azure.search.documents.indexes.models import (
-    PrioritizedFields,
-    SearchableField, SearchIndex, SemanticConfiguration, SemanticField, SemanticSettings,
-    SimpleField)
+from azure.search.documents.indexes.models import (PrioritizedFields,
+                                                   SearchableField,
+                                                   SearchIndex,
+                                                   SemanticConfiguration,
+                                                   SemanticField,
+                                                   SemanticSettings,
+                                                   SimpleField)
 from azure.storage.blob import BlobServiceClient
 from pypdf import PdfReader, PdfWriter
+
+from .clients import (AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,AZURE_STORAGE_CONTAINER, LOCAL_PDF_PARSER_BOOL, LOG_VERBOSE, AZURE_FORM_RECOGNIZER_SERVICE, AZURE_SEARCH_SERVICE, AZURE_SEARCH_INDEX, search_creds, CATEGORY, formrecognizer_creds)
 
 MAX_SECTION_LENGTH = 1000
 SENTENCE_SEARCH_LIMIT = 100
 SECTION_OVERLAP = 100
 
-storageaccount = os.environ.get("AZURE_STORAGE_ACCOUNT")
-container = os.environ.get("AZURE_STORAGE_CONTAINER")
-searchservice = os.environ.get("AZURE_SEARCH_SERVICE")
-searchkey = os.environ.get("AZURE_SEARCH_KEY")
-index = os.environ.get("AZURE_SEARCH_INDEX")
-storagekey = os.environ.get("AZURE_STORAGE_KEY")
-formrecognizerservice = os.environ.get("AZURE_FORM_RECOGNIZER_SERVICE")
-formrecognizerkey = os.environ.get("AZURE_FORM_RECOGNIZER_KEY")
-tenantid = os.environ.get("AZURE_TENANT_ID")
+# AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT")
+# container = os.environ.get("AZURE_STORAGE_CONTAINER")
+# AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
+# searchkey = os.environ.get("AZURE_SEARCH_KEY")
+# index = os.environ.get("AZURE_SEARCH_INDEX")
+# AZURE_STORAGE_KEY = os.environ.get("AZURE_STORAGE_KEY")
+# AZURE_FORM_RECOGNIZER_SERVICE = os.environ.get("AZURE_FORM_RECOGNIZER_SERVICE")
+# formrecognizerkey = os.environ.get("AZURE_FORM_RECOGNIZER_KEY")
+# tenantid = os.environ.get("AZURE_TENANT_ID")
 
-# optional environment variables
-localpdfparser = os.environ.get("LOCAL_PDF_PARSER_BOOL") or False
-verbose = os.environ.get("VERBOSE_BOOL") or True
-category = os.environ.get("CATEGORY") or "default"
+# # optional environment variables
+# localpdfparser = os.environ.get("LOCAL_PDF_PARSER_BOOL") or False
+# LOG_VERBOSE = os.environ.get("LOG_VERBOSE_BOOL") or True
+# category = os.environ.get("CATEGORY") or "default"
 
-# Use the current user identity to connect to Azure services unless a key is explicitly set for any of them
-azd_credential = DefaultAzureCredential()
-# azd_credential = AzureDeveloperCliCredential() if tenantid == None else AzureDeveloperCliCredential(tenant_id=tenantid)
-default_creds = azd_credential if searchkey == None or storagekey == None else None
-search_creds = default_creds if searchkey == None else AzureKeyCredential(searchkey)
-# storage_creds = default_creds if storagekey == None else AzureKeyCredential(storagekey)
-formrecognizer_creds = default_creds if formrecognizerkey == None else AzureKeyCredential(formrecognizerkey)
-# logging.info(f"Using credentials: {search_creds}, {storage_creds}, {formrecognizer_creds}")
+# # Use the current user identity to connect to Azure services unless a key is explicitly set for any of them
+# azd_credential = DefaultAzureCredential()
+# # azd_credential = AzureDeveloperCliCredential() if tenantid == None else AzureDeveloperCliCredential(tenant_id=tenantid)
+# default_creds = azd_credential if searchkey == None or AZURE_STORAGE_KEY == None else None
+# search_creds = default_creds if searchkey == None else AzureKeyCredential(searchkey)
+# # storage_creds = default_creds if AZURE_STORAGE_KEY == None else AzureKeyCredential(AZURE_STORAGE_KEY)
+# formrecognizer_creds = default_creds if formrecognizerkey == None else AzureKeyCredential(formrecognizerkey)
+# # logging.info(f"Using credentials: {search_creds}, {storage_creds}, {formrecognizer_creds}")
 
 def blob_name_from_file_page(filename, page = 0):
     if os.path.splitext(filename)[1].lower() == ".pdf":
@@ -57,10 +61,10 @@ def blob_name_from_file_page(filename, page = 0):
 
 def upload_blobs(filename):
     try:
-        if verbose: logging.info(f"Uploading blobs for '{filename}' and storage_key '{storagekey}")
+        if LOG_VERBOSE: logging.info(f"Uploading blobs for '{filename}' and storage_key '{AZURE_STORAGE_KEY}")
         credential = DefaultAzureCredential()
-        blob_service = BlobServiceClient(account_url=f"https://{storageaccount}.blob.core.windows.net", credential=credential)
-        blob_container = blob_service.get_container_client(container) # type: ignore
+        blob_service = BlobServiceClient(account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", credential=credential)
+        blob_container = blob_service.get_container_client(AZURE_STORAGE_CONTAINER) # type: ignore
     except Exception as e:
         logging.error(f"Error connecting to blob storage: {e}")
         sys.exit(1)
@@ -73,7 +77,7 @@ def upload_blobs(filename):
         pages = reader.pages
         for i in range(len(pages)):
             blob_name = blob_name_from_file_page(filename, i)
-            if verbose: logging.info(f"\tUploading blob for page {i} -> {blob_name}")
+            if LOG_VERBOSE: logging.info(f"\tUploading blob for page {i} -> {blob_name}")
             f = io.BytesIO()
             writer = PdfWriter()
             writer.add_page(pages[i])
@@ -86,9 +90,9 @@ def upload_blobs(filename):
             blob_container.upload_blob(blob_name, data, overwrite=True)
 
 def remove_blobs(filename,storage_creds,container):
-    if verbose: logging.info(f"Removing blobs for '{filename or '<all>'}'")
-    blob_service = BlobServiceClient(account_url=f"https://{storageaccount}.blob.core.windows.net", credential=storage_creds)
-    blob_container = blob_service.get_container_client(container)
+    if LOG_VERBOSE: logging.info(f"Removing blobs for '{filename or '<all>'}'")
+    blob_service = BlobServiceClient(account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", credential=storage_creds)
+    blob_container = blob_service.get_container_client(AZURE_STORAGE_CONTAINER)
     if blob_container.exists():
         if filename == None:
             blobs = blob_container.list_blob_names()
@@ -96,7 +100,7 @@ def remove_blobs(filename,storage_creds,container):
             prefix = os.path.splitext(os.path.basename(filename))[0]
             blobs = filter(lambda b: re.match(f"{prefix}-\d+\.pdf", b), blob_container.list_blob_names(name_starts_with=os.path.splitext(os.path.basename(prefix))[0]))
         for b in blobs:
-            if verbose: logging.info(f"\tRemoving blob {b}")
+            if LOG_VERBOSE: logging.info(f"\tRemoving blob {b}")
             blob_container.delete_blob(b)
 
 def table_to_html(table):
@@ -117,7 +121,7 @@ def table_to_html(table):
 def get_document_text(filename):
     offset = 0
     page_map = []
-    if localpdfparser:
+    if LOCAL_PDF_PARSER_BOOL:
         reader = PdfReader(filename)
         pages = reader.pages
         for page_num, p in enumerate(pages):
@@ -125,8 +129,8 @@ def get_document_text(filename):
             page_map.append((page_num, offset, page_text))
             offset += len(page_text)
     else:
-        if verbose: logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
-        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{formrecognizerservice}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"}) # type: ignore
+        if LOG_VERBOSE: logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
+        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{AZURE_FORM_RECOGNIZER_SERVICE}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"}) # type: ignore
         with open(filename, "rb") as f:
             poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
         form_recognizer_results = poller.result()
@@ -213,7 +217,7 @@ def split_text(page_map):
             # If the section ends with an unclosed table, we need to start the next section with the table.
             # If table starts inside SENTENCE_SEARCH_LIMIT, we ignore it, as that will cause an infinite loop for tables longer than MAX_SECTION_LENGTH
             # If last table starts inside SECTION_OVERLAP, keep overlapping
-            if verbose: logging.info(f"Section ends with unclosed table, starting next section with the table at page {find_page(start)} offset {start} table start {last_table_start}")
+            if LOG_VERBOSE: logging.info(f"Section ends with unclosed table, starting next section with the table at page {find_page(start)} offset {start} table start {last_table_start}")
             start = min(end - SECTION_OVERLAP, start + last_table_start)
         else:
             start = end - SECTION_OVERLAP
@@ -226,14 +230,14 @@ def create_sections(filename, page_map):
         yield {
             "id": re.sub("[^0-9a-zA-Z_-]","_",f"{filename}-{i}"),
             "content": section,
-            "category": category,
+            "category": CATEGORY,
             "sourcepage": blob_name_from_file_page(filename, pagenum),
             "sourcefile": filename
         }
 
 def create_search_index(index,search_creds):
-    if verbose: logging.info(f"Ensuring search index {index} exists")
-    index_client = SearchIndexClient(endpoint=f"https://{searchservice}.search.windows.net/",
+    if LOG_VERBOSE: logging.info(f"Ensuring search index {index} exists")
+    index_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
                                      credential=search_creds)
     if index not in index_client.list_index_names():
         index = SearchIndex(
@@ -251,14 +255,14 @@ def create_search_index(index,search_creds):
                     prioritized_fields=PrioritizedFields(
                         title_field=None, prioritized_content_fields=[SemanticField(field_name='content')]))])
         )
-        if verbose: logging.info(f"Creating {index} search index")
+        if LOG_VERBOSE: logging.info(f"Creating {index} search index")
         index_client.create_index(index)
     else:
-        if verbose: logging.info(f"Search index {index} already exists")
+        if LOG_VERBOSE: logging.info(f"Search index {index} already exists")
 
 def index_sections(filename, sections, index, search_creds):
-    if verbose: logging.info(f"Indexing sections from '{filename}' into search index '{index}'")
-    search_client = SearchClient(endpoint=f"https://{searchservice}.search.windows.net/",
+    if LOG_VERBOSE: logging.info(f"Indexing sections from '{filename}' into search index '{index}'")
+    search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
                                     index_name=index,
                                     credential=search_creds)
     i = 0
@@ -269,17 +273,17 @@ def index_sections(filename, sections, index, search_creds):
         if i % 1000 == 0:
             results = search_client.upload_documents(documents=batch)
             succeeded = sum([1 for r in results if r.succeeded])
-            if verbose: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
+            if LOG_VERBOSE: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
             batch = []
 
     if len(batch) > 0:
         results = search_client.upload_documents(documents=batch)
         succeeded = sum([1 for r in results if r.succeeded])
-        if verbose: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
+        if LOG_VERBOSE: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
 
 def remove_from_index(filename,index,search_creds):
-    if verbose: logging.info(f"Removing sections from '{filename or '<all>'}' from search index '{index}'")
-    search_client = SearchClient(endpoint=f"https://{searchservice}.search.windows.net/",
+    if LOG_VERBOSE: logging.info(f"Removing sections from '{filename or '<all>'}' from search index '{index}'")
+    search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
                                     index_name=index,
                                     credential=search_creds)
     while True:
@@ -288,7 +292,7 @@ def remove_from_index(filename,index,search_creds):
         if r.get_count() == 0:
             break
         r = search_client.delete_documents(documents=[{ "id": d["id"] } for d in r])
-        if verbose: logging.info(f"\tRemoved {len(r)} sections from index")
+        if LOG_VERBOSE: logging.info(f"\tRemoved {len(r)} sections from index")
         # It can take a few seconds for search results to reflect changes, so wait a bit
         time.sleep(2)
 
@@ -296,5 +300,5 @@ def process_pdf(filename):
     upload_blobs(filename)
     page_map = get_document_text(filename)
     sections = create_sections(os.path.basename(filename), page_map)
-    create_search_index(index,search_creds)
-    index_sections(os.path.basename(filename), sections, index, search_creds)
+    create_search_index(AZURE_SEARCH_INDEX,search_creds)
+    index_sections(os.path.basename(filename), sections, AZURE_SEARCH_INDEX, search_creds)
