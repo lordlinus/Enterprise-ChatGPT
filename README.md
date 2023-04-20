@@ -1,10 +1,13 @@
-# ChatGPT + Enterprise data with Azure OpenAI and Cognitive Search
+# ChatGPT + Enterprise data with Azure OpenAI
 
 This demo is based on [azure-search-openai-demo](https://github.com/Azure-Samples/azure-search-openai-demo) and using static web app for frontend and Azure functions for the backend API's.
 
 In addition to [azure-search-openai-demo feature](https://github.com/Azure-Samples/azure-search-openai-demo#features) this repo includes:
 
 - Ability to upload file from UI
+- Update to newer version of langchain(0.0.141)
+- Updated rrr ( read-retrieve-read) approach to use pandas dataframe and Bing search lookup in addition to Azure cognitive search
+  > Note: update azure function config with `BING_SUBSCRIPTION_KEY` to use. Bing API service deployment is not yet included in the `azd` infra deployment
 
 <img src="docs/uploadscreen.png" width="600">
 

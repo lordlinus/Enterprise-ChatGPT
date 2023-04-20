@@ -10,6 +10,7 @@ from langchain.llms.openai import AzureOpenAI
 from ..langchainadapters import HtmlCallbackHandler
 from ..text import nonewlines
 from ..lookuptool import pandas_lookup, web_search
+from ..clients import BING_SUBSCRIPTION_KEY
 
 # Attempt to answer questions by iteratively evaluating the question to see what information is missing, and once all information
 # is present then formulate an answer. Each iteration consists of two parts: first use GPT to see if we need more information, 
@@ -109,7 +110,10 @@ Thought: {agent_scratchpad}"""
         pandas_tool = Tool(name="PandasLookup", func=lambda x: pandas_lookup(x.lower()), description=self.PandasLookupToolDescription)
         bing_tool = Tool(name="BingSearchLookup", func=lambda q: web_search(q), description=self.BingSearchToolDescription)
         # employee_tool = EmployeeInfoTool("Employee1")
-        tools = [pandas_tool, acs_tool, bing_tool]
+        # Default to pandas and acs tool and use bing_tool only if key is added to config
+        tools = [pandas_tool, acs_tool]
+        if BING_SUBSCRIPTION_KEY:
+            tools.append(bing_tool)
 
         prompt = ZeroShotAgent.create_prompt(
             tools=tools,
