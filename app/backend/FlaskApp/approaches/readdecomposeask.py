@@ -70,7 +70,7 @@ class ReadDecomposeAsk(Approach):
         llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
         tools = [
             Tool(name="Search", func=lambda q: self.search(q, overrides), description="Searches the document store for the given query"),
-            Tool(name="Lookup", func=self.lookup)
+            Tool(name="Lookup", func=self.lookup, description="Looks up the given query in the document store")
         ]
 
         # Like results above, not great to keep this as a global, will interfere with interleaving
