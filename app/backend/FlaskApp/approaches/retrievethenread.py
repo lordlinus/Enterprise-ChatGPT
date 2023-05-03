@@ -70,7 +70,7 @@ Answer:
 
         prompt = (overrides.get("prompt_template") or self.template).format(q=q, retrieved=content)
         completion = openai.Completion.create(
-            engine=self.openai_deployment, 
+            model=self.openai_deployment, 
             prompt=prompt, 
             temperature=overrides.get("temperature") or 0.3, 
             max_tokens=1024, 

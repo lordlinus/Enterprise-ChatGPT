@@ -30,6 +30,7 @@ AZURE_TENANT_ID = os.environ.get("AZURE_TENANT_ID") or None
 LOCAL_PDF_PARSER_BOOL = os.environ.get("LOCAL_PDF_PARSER_BOOL") or False
 LOG_VERBOSE = os.environ.get("LOG_VERBOSE") or False
 
+OPENAI_TOKEN = os.environ.get("OPENAI_TOKEN") or "sk-"
 # The default category to use if none is specified
 AZURE_OPENAI_DEFAULT_TEMP = os.environ.get("AZURE_OPENAI_DEFAULT_TEMP") or 0.3
 
@@ -54,15 +55,17 @@ BING_SEARCH_URL = os.environ.get("BING_SEARCH_URL") or 'https://api.bing.microso
 azure_credential = DefaultAzureCredential()
 
 # Used by the OpenAI SDK
-openai.api_type = "azure"
-openai.api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
-openai.api_version = "2022-12-01"
+# openai.api_type = "azure"
+# openai.api_base = f"https://{AZURE_OPENAI_SERVICE}.openai.azure.com"
+# openai.api_version = "2022-12-01"
 
 # Comment these two lines out if using keys, set your API key in the OPENAI_API_KEY environment variable instead
-openai.api_type = "azure_ad"
-openai_token = azure_credential.get_token(
-    "https://cognitiveservices.azure.com/.default")
-openai.api_key = openai_token.token
+# openai.api_type = "azure_ad"
+# openai_token = azure_credential.get_token(
+#     "https://cognitiveservices.azure.com/.default")
+# openai.api_key = openai_token.token
+openai.api_key = OPENAI_TOKEN
+openai_token = openai.api_key
 
 # Set up clients for Cognitive Search and Storage
 search_client = SearchClient(
@@ -88,7 +91,7 @@ formrecognizer_creds = azure_credential if AZURE_FORM_RECOGNIZER_KEY == None els
 
 def ensure_openai_token():
     global openai_token
-    if openai_token.expires_on < int(time.time()) - 60:
-        openai_token = azure_credential.get_token(
-            "https://cognitiveservices.azure.com/.default")
-        openai.api_key = openai_token.token
+    # if openai_token.expires_on < int(time.time()) - 60:
+    #     openai_token = azure_credential.get_token(
+    #         "https://cognitiveservices.azure.com/.default")
+    #     openai.api_key = openai_token.token

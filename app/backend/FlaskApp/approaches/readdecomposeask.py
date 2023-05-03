@@ -2,7 +2,7 @@ import openai
 from .approach import Approach
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
-from langchain.llms.openai import AzureOpenAI
+from langchain.llms.openai import AzureOpenAI, OpenAI
 from langchain.prompts import PromptTemplate, BasePromptTemplate
 from langchain.callbacks.base import CallbackManager
 from langchain.agents import Tool, AgentExecutor
@@ -67,7 +67,8 @@ class ReadDecomposeAsk(Approach):
         cb_handler = HtmlCallbackHandler()
         cb_manager = CallbackManager(handlers=[cb_handler])
         
-        llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
+        # llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
+        llm = OpenAI(model_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
         # TODO: Add a tool for other "lookup" that uses the search client to find the answer to the question
         tools = [
             Tool(name="Search", func=lambda q: self.search(q, overrides), description="Searches the document store for the given query"),

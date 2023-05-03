@@ -57,7 +57,7 @@ Search query:
         # STEP 1: Generate an optimized keyword search query based on the chat history and the last question
         prompt = self.query_prompt_template.format(chat_history=self.get_chat_history_as_text(history, include_last_turn=False), question=history[-1]["user"])
         completion = openai.Completion.create(
-            engine=self.gpt_deployment, 
+            model=self.gpt_deployment, 
             prompt=prompt, 
             temperature=0.0, 
             max_tokens=32, 
@@ -96,7 +96,7 @@ Search query:
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
         completion = openai.Completion.create(
-            engine=self.chatgpt_deployment, 
+            model=self.chatgpt_deployment,
             prompt=prompt, 
             temperature=overrides.get("temperature") or 0.7, 
             max_tokens=1024, 
