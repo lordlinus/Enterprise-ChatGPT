@@ -1,8 +1,10 @@
-import openai
-from .approach import Approach
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
+
+from ..clients import completion_client
 from ..text import nonewlines
+from .approach import Approach
+
 
 # Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
 # top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion 
@@ -69,12 +71,13 @@ Answer:
         content = "\n".join(results)
 
         prompt = (overrides.get("prompt_template") or self.template).format(q=q, retrieved=content)
-        completion = openai.Completion.create(
-            model=self.openai_deployment, 
-            prompt=prompt, 
-            temperature=overrides.get("temperature") or 0.3, 
-            max_tokens=1024, 
-            n=1, 
-            stop=["\n"])
+        completion = completion_client(prompt=prompt,max_tokens=1024,temperature=overrides.get("temperature") or 0.3,n=1,stop=["\n"], deployment_name=self.openai_deployment)
+        # completion = openai.Completion.create(
+        #     model=self.openai_deployment, 
+        #     prompt=prompt, 
+        #     temperature=overrides.get("temperature") or 0.3, 
+        #     max_tokens=1024, 
+        #     n=1, 
+        #     stop=["\n"])
 
         return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Question:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
