@@ -1,16 +1,15 @@
-import openai
-from .approach import Approach
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
-from langchain.llms.openai import AzureOpenAI, OpenAI
+from langchain.agents import AgentExecutor, Tool, ZeroShotAgent
 from langchain.callbacks.base import CallbackManager
 from langchain.chains import LLMChain
-from langchain.agents import Tool, ZeroShotAgent, AgentExecutor
-from langchain.llms.openai import AzureOpenAI
+
+from ..clients import BING_SUBSCRIPTION_KEY, llm_client, search_client
 from ..langchainadapters import HtmlCallbackHandler
-from ..text import nonewlines
 from ..lookuptool import pandas_lookup, web_search
-from ..clients import BING_SUBSCRIPTION_KEY
+from ..text import nonewlines
+from .approach import Approach
+
 
 # Attempt to answer questions by iteratively evaluating the question to see what information is missing, and once all information
 # is present then formulate an answer. Each iteration consists of two parts: first use GPT to see if we need more information, 
@@ -69,7 +68,7 @@ Thought: {agent_scratchpad}"""
     BingSearchToolDescription = "useful for searching latest information from the web and only if you cannot find answer from internal information sources"
 
     def __init__(self, search_client: SearchClient, openai_deployment: str, sourcepage_field: str, content_field: str):
-        self.search_client = search_client
+        # self.search_client = search_client
         self.openai_deployment = openai_deployment
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
@@ -81,7 +80,7 @@ Thought: {agent_scratchpad}"""
         filter = "category ne '{}'".format(exclude_category.replace("'", "''")) if exclude_category else None
 
         if overrides.get("semantic_ranker"):
-            r = self.search_client.search(q,
+            r = search_client.search(q,
                                           filter=filter, 
                                           query_type=QueryType.SEMANTIC, 
                                           query_language="en-us", 
@@ -90,7 +89,7 @@ Thought: {agent_scratchpad}"""
                                           top = top,
                                           query_caption="extractive|highlight-false" if use_semantic_captions else None)
         else:
-            r = self.search_client.search(q, filter=filter, top=top)
+            r = search_client.search(q, filter=filter, top=top)
         if use_semantic_captions:
             self.results = [doc[self.sourcepage_field] + ":" + nonewlines(" -.- ".join([c.text for c in doc['@search.captions']])) for doc in r]
         else:
@@ -121,12 +120,13 @@ Thought: {agent_scratchpad}"""
             suffix=overrides.get("prompt_template_suffix") or self.template_suffix,
             input_variables = ["input", "agent_scratchpad"])
         # llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key) # type: ignore
-        llm = OpenAI(model_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key) # type: ignore
+        # llm = OpenAI(model_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key) # type: ignore
+        llm = llm_client(deployment_name=self.openai_deployment, overrides=overrides) # type: ignore
         chain = LLMChain(llm = llm, prompt = prompt)
         agent_exec = AgentExecutor.from_agent_and_tools(
             agent = ZeroShotAgent(llm_chain = chain, tools = tools), # type: ignore
             tools = tools, 
-            verbose = True,
+            verbose = False,
             max_iterations=5, 
             callback_manager = cb_manager)
         result = agent_exec.run(q)

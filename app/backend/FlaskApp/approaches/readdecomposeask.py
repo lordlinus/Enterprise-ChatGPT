@@ -1,19 +1,21 @@
-import openai
-from .approach import Approach
+from typing import List
+
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
-from langchain.llms.openai import AzureOpenAI, OpenAI
-from langchain.prompts import PromptTemplate, BasePromptTemplate
-from langchain.callbacks.base import CallbackManager
-from langchain.agents import Tool, AgentExecutor
+from langchain.agents import AgentExecutor, Tool
 from langchain.agents.react.base import ReActDocstoreAgent
+from langchain.callbacks.base import CallbackManager
+from langchain.prompts import BasePromptTemplate, PromptTemplate
+
+from ..clients import llm_client, search_client
 from ..langchainadapters import HtmlCallbackHandler
 from ..text import nonewlines
-from typing import List
+from .approach import Approach
+
 
 class ReadDecomposeAsk(Approach):
     def __init__(self, search_client: SearchClient, openai_deployment: str, sourcepage_field: str, content_field: str):
-        self.search_client = search_client
+        # self.search_client = search_client
         self.openai_deployment = openai_deployment
         self.sourcepage_field = sourcepage_field
         self.content_field = content_field
@@ -25,7 +27,7 @@ class ReadDecomposeAsk(Approach):
         filter = "category ne '{}'".format(exclude_category.replace("'", "''")) if exclude_category else None
 
         if overrides.get("semantic_ranker"):
-            r = self.search_client.search(q,
+            r = search_client.search(q,
                                           filter=filter,
                                           query_type=QueryType.SEMANTIC, 
                                           query_language="en-us", 
@@ -34,7 +36,7 @@ class ReadDecomposeAsk(Approach):
                                           top = top,
                                           query_caption="extractive|highlight-false" if use_semantic_captions else None)
         else:
-            r = self.search_client.search(q, filter=filter, top=top)
+            r = search_client.search(q, filter=filter, top=top)
         if use_semantic_captions:
             self.results = [doc[self.sourcepage_field] + ":" + nonewlines(" . ".join([c.text for c in doc['@search.captions'] ])) for doc in r]
         else:
@@ -42,7 +44,7 @@ class ReadDecomposeAsk(Approach):
         return "\n".join(self.results)
 
     def lookup(self, q: str) -> str:
-        r = self.search_client.search(q,
+        r = search_client.search(q,
                                       top = 1,
                                       include_total_count=True,
                                       query_type=QueryType.SEMANTIC, 
@@ -67,8 +69,7 @@ class ReadDecomposeAsk(Approach):
         cb_handler = HtmlCallbackHandler()
         cb_manager = CallbackManager(handlers=[cb_handler])
         
-        # llm = AzureOpenAI(deployment_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
-        llm = OpenAI(model_name=self.openai_deployment, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key)
+        llm = llm_client(deployment_name=self.openai_deployment, overrides=overrides)
         # TODO: Add a tool for other "lookup" that uses the search client to find the answer to the question
         tools = [
             Tool(name="Search", func=lambda q: self.search(q, overrides), description="Searches the document store for the given query"),

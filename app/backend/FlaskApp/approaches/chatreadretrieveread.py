@@ -1,8 +1,12 @@
-import openai
+import logging
+
 from azure.search.documents import SearchClient
 from azure.search.documents.models import QueryType
-from .approach import Approach
+
+from ..clients import completion_client, search_client
 from ..text import nonewlines
+from .approach import Approach
+
 
 # Simple retrieve-then-read implementation, using the Cognitive Search and OpenAI APIs directly. It first retrieves
 # top documents from search, then constructs a prompt with them, and then uses OpenAI to generate an completion 
@@ -42,7 +46,7 @@ Search query:
 """
 
     def __init__(self, search_client: SearchClient, chatgpt_deployment: str, gpt_deployment: str, sourcepage_field: str, content_field: str):
-        self.search_client = search_client
+        # self.search_client = search_client
         self.chatgpt_deployment = chatgpt_deployment
         self.gpt_deployment = gpt_deployment
         self.sourcepage_field = sourcepage_field
@@ -56,18 +60,16 @@ Search query:
 
         # STEP 1: Generate an optimized keyword search query based on the chat history and the last question
         prompt = self.query_prompt_template.format(chat_history=self.get_chat_history_as_text(history, include_last_turn=False), question=history[-1]["user"])
-        completion = openai.Completion.create(
-            model=self.gpt_deployment, 
-            prompt=prompt, 
-            temperature=0.0, 
-            max_tokens=32, 
-            n=1, 
-            stop=["\n"])
+
+        completion = completion_client(prompt=prompt, max_tokens=32, temperature=0.0, n=1, stop=["\n"], deployment_name=self.gpt_deployment)
+
         q = completion.choices[0].text
+
+        logging.info(f"Generated search query: {q}")
 
         # STEP 2: Retrieve relevant documents from the search index with the GPT optimized query
         if overrides.get("semantic_ranker"):
-            r = self.search_client.search(q, 
+            r = search_client.search(q, 
                                           filter=filter,
                                           query_type=QueryType.SEMANTIC, 
                                           query_language="en-us", 
@@ -76,7 +78,8 @@ Search query:
                                           top=top, 
                                           query_caption="extractive|highlight-false" if use_semantic_captions else None)
         else:
-            r = self.search_client.search(q, filter=filter, top=top)
+            r = search_client.search(q, filter=filter, top=top)
+
         if use_semantic_captions:
             results = [doc[self.sourcepage_field] + ": " + nonewlines(" . ".join([c.text for c in doc['@search.captions']])) for doc in r]
         else:
@@ -95,13 +98,7 @@ Search query:
             prompt = prompt_override.format(sources=content, chat_history=self.get_chat_history_as_text(history), follow_up_questions_prompt=follow_up_questions_prompt)
 
         # STEP 3: Generate a contextual and content specific answer using the search results and chat history
-        completion = openai.Completion.create(
-            model=self.chatgpt_deployment,
-            prompt=prompt, 
-            temperature=overrides.get("temperature") or 0.7, 
-            max_tokens=1024, 
-            n=1, 
-            stop=["<|im_end|>", "<|im_start|>"])
+        completion = completion_client(prompt=prompt, max_tokens=1024, temperature=overrides.get("temperature") or 0, n=1, stop=["<|im_end|>", "<|im_start|>"], deployment_name=self.chatgpt_deployment)
 
         return {"data_points": results, "answer": completion.choices[0].text, "thoughts": f"Searched for:<br>{q}<br><br>Prompt:<br>" + prompt.replace('\n', '<br>')}
     

@@ -1,26 +1,22 @@
-import json
 import logging
 import mimetypes
 import os
 import re
-import time
 from tempfile import mkdtemp
 
 import azure.functions as func
 import magic
-import openai
-from azure.identity import DefaultAzureCredential
-from azure.search.documents import SearchClient
-from azure.storage.blob import BlobServiceClient
 from flask import Flask, jsonify, request
 
 from .approaches.chatreadretrieveread import ChatReadRetrieveReadApproach
 from .approaches.readdecomposeask import ReadDecomposeAsk
 from .approaches.readretrieveread import ReadRetrieveReadApproach
 from .approaches.retrievethenread import RetrieveThenReadApproach
-from .cog_services import process_pdf
 # Always use relative import for custom module
-from .clients import (search_client, blob_container, ensure_openai_token, AZURE_OPENAI_GPT_DEPLOYMENT,KB_FIELDS_CATEGORY, KB_FIELDS_CONTENT, KB_FIELDS_SOURCEPAGE, AZURE_OPENAI_CHATGPT_DEPLOYMENT)
+from .clients import (AZURE_OPENAI_CHATGPT_DEPLOYMENT,
+                      AZURE_OPENAI_GPT_DEPLOYMENT, KB_FIELDS_CONTENT, KB_FIELDS_SOURCEPAGE, blob_container,
+                      ensure_openai_token, search_client)
+from .cog_services import process_pdf
 
 # Various approaches to integrate GPT and external knowledge, most applications will use a single one of these patterns
 # or some derivative, here we include several for exploration purposes
