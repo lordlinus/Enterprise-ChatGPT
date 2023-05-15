@@ -131,8 +131,6 @@ search_client = SearchClient(
     index_name=AZURE_SEARCH_INDEX,
     credential=AzureKeyCredential(AZURE_SEARCH_KEY))
 
-    credential=AzureKeyCredential(AZURE_SEARCH_KEY))
-
 blob_client = BlobServiceClient(
     account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net",
     credential=azure_credential)

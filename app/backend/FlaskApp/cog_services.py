@@ -8,7 +8,7 @@ import time
 
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.identity import DefaultAzureCredential
-from azure.search.documents import SearchClient
+# from azure.search.documents import SearchClient
 # from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (PrioritizedFields,
                                                    SearchableField,
