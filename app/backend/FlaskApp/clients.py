@@ -7,6 +7,7 @@ import openai
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
+from azure.search.documents.indexes import SearchIndexClient
 from azure.storage.blob import BlobServiceClient
 from langchain.llms.openai import AzureOpenAI
 from langchain.utilities import BingSearchAPIWrapper
@@ -81,6 +82,8 @@ def get_random_endpoint():
 # If you encounter a blocking error during a DefaultAzureCredntial resolution, you can exclude the problematic credential by using a parameter (ex. exclude_shared_token_cache_credential=True)
 azure_credential = DefaultAzureCredential()
 
+index_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
+                                 credential=AzureKeyCredential(AZURE_SEARCH_KEY))
 
 # Set up clients for Cognitive Search and Storage
 search_client = SearchClient(
@@ -95,8 +98,8 @@ blob_container = blob_client.get_container_client(AZURE_STORAGE_CONTAINER)
 
 default_creds = azure_credential if AZURE_STORAGE_KEY == None else AzureKeyCredential(
     AZURE_STORAGE_KEY)
-search_creds = azure_credential if AZURE_SEARCH_KEY == None else AzureKeyCredential(
-    AZURE_SEARCH_KEY)
+# search_creds = azure_credential if AZURE_SEARCH_KEY == None else AzureKeyCredential(
+#     AZURE_SEARCH_KEY)
 formrecognizer_creds = azure_credential if AZURE_FORM_RECOGNIZER_KEY == None else AzureKeyCredential(
     AZURE_FORM_RECOGNIZER_KEY)
 

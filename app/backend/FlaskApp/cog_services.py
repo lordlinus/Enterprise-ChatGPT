@@ -9,7 +9,7 @@ import time
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.identity import DefaultAzureCredential
 from azure.search.documents import SearchClient
-from azure.search.documents.indexes import SearchIndexClient
+# from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (PrioritizedFields,
                                                    SearchableField,
                                                    SearchIndex,
@@ -20,7 +20,7 @@ from azure.search.documents.indexes.models import (PrioritizedFields,
 from azure.storage.blob import BlobServiceClient
 from pypdf import PdfReader, PdfWriter
 
-from .clients import (AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,AZURE_STORAGE_CONTAINER, LOCAL_PDF_PARSER_BOOL, LOG_VERBOSE, AZURE_FORM_RECOGNIZER_SERVICE, AZURE_SEARCH_SERVICE, AZURE_SEARCH_INDEX, search_creds, CATEGORY, formrecognizer_creds)
+from .clients import (AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,AZURE_STORAGE_CONTAINER, LOCAL_PDF_PARSER_BOOL, LOG_VERBOSE, AZURE_FORM_RECOGNIZER_SERVICE, AZURE_SEARCH_SERVICE, AZURE_SEARCH_INDEX, search_client, index_client, CATEGORY, formrecognizer_creds)
 
 MAX_SECTION_LENGTH = 1000
 SENTENCE_SEARCH_LIMIT = 100
@@ -235,10 +235,10 @@ def create_sections(filename, page_map):
             "sourcefile": filename
         }
 
-def create_search_index(index,search_creds):
+def create_search_index(index):
     if LOG_VERBOSE: logging.info(f"Ensuring search index {index} exists")
-    index_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
-                                     credential=search_creds)
+    # index_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
+    #                                  credential=search_creds)
     if index not in index_client.list_index_names():
         index = SearchIndex(
             name=index,
@@ -260,11 +260,11 @@ def create_search_index(index,search_creds):
     else:
         if LOG_VERBOSE: logging.info(f"Search index {index} already exists")
 
-def index_sections(filename, sections, index, search_creds):
+def index_sections(filename, sections, index):
     if LOG_VERBOSE: logging.info(f"Indexing sections from '{filename}' into search index '{index}'")
-    search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
-                                    index_name=index,
-                                    credential=search_creds)
+    # search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
+    #                                 index_name=index,
+    #                                 credential=search_creds)
     i = 0
     batch = []
     for s in sections:
@@ -300,5 +300,5 @@ def process_pdf(filename):
     upload_blobs(filename)
     page_map = get_document_text(filename)
     sections = create_sections(os.path.basename(filename), page_map)
-    create_search_index(AZURE_SEARCH_INDEX,search_creds)
-    index_sections(os.path.basename(filename), sections, AZURE_SEARCH_INDEX, search_creds)
+    create_search_index(AZURE_SEARCH_INDEX)
+    index_sections(os.path.basename(filename), sections, AZURE_SEARCH_INDEX)
