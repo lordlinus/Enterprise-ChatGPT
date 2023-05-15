@@ -61,7 +61,7 @@ def blob_name_from_file_page(filename, page = 0):
 
 def upload_blobs(filename):
     try:
-        if LOG_VERBOSE: logging.info(f"Uploading blobs for '{filename}' and storage_key '{AZURE_STORAGE_KEY}")
+        logging.info(f"Uploading blobs for '{filename}' and storage_key '{AZURE_STORAGE_KEY}")
         credential = DefaultAzureCredential()
         blob_service = BlobServiceClient(account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", credential=credential)
         blob_container = blob_service.get_container_client(AZURE_STORAGE_CONTAINER) # type: ignore
@@ -77,7 +77,7 @@ def upload_blobs(filename):
         pages = reader.pages
         for i in range(len(pages)):
             blob_name = blob_name_from_file_page(filename, i)
-            if LOG_VERBOSE: logging.info(f"\tUploading blob for page {i} -> {blob_name}")
+            logging.info(f"\tUploading blob for page {i} -> {blob_name}")
             f = io.BytesIO()
             writer = PdfWriter()
             writer.add_page(pages[i])
@@ -90,7 +90,7 @@ def upload_blobs(filename):
             blob_container.upload_blob(blob_name, data, overwrite=True)
 
 def remove_blobs(filename,storage_creds,container):
-    if LOG_VERBOSE: logging.info(f"Removing blobs for '{filename or '<all>'}'")
+    logging.info(f"Removing blobs for '{filename or '<all>'}'")
     blob_service = BlobServiceClient(account_url=f"https://{AZURE_STORAGE_ACCOUNT}.blob.core.windows.net", credential=storage_creds)
     blob_container = blob_service.get_container_client(AZURE_STORAGE_CONTAINER)
     if blob_container.exists():
@@ -100,7 +100,7 @@ def remove_blobs(filename,storage_creds,container):
             prefix = os.path.splitext(os.path.basename(filename))[0]
             blobs = filter(lambda b: re.match(f"{prefix}-\d+\.pdf", b), blob_container.list_blob_names(name_starts_with=os.path.splitext(os.path.basename(prefix))[0]))
         for b in blobs:
-            if LOG_VERBOSE: logging.info(f"\tRemoving blob {b}")
+            logging.info(f"\tRemoving blob {b}")
             blob_container.delete_blob(b)
 
 def table_to_html(table):
@@ -129,7 +129,7 @@ def get_document_text(filename):
             page_map.append((page_num, offset, page_text))
             offset += len(page_text)
     else:
-        if LOG_VERBOSE: logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
+        logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
         form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{AZURE_FORM_RECOGNIZER_SERVICE}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"}) # type: ignore
         with open(filename, "rb") as f:
             poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
@@ -217,7 +217,7 @@ def split_text(page_map):
             # If the section ends with an unclosed table, we need to start the next section with the table.
             # If table starts inside SENTENCE_SEARCH_LIMIT, we ignore it, as that will cause an infinite loop for tables longer than MAX_SECTION_LENGTH
             # If last table starts inside SECTION_OVERLAP, keep overlapping
-            if LOG_VERBOSE: logging.info(f"Section ends with unclosed table, starting next section with the table at page {find_page(start)} offset {start} table start {last_table_start}")
+            logging.info(f"Section ends with unclosed table, starting next section with the table at page {find_page(start)} offset {start} table start {last_table_start}")
             start = min(end - SECTION_OVERLAP, start + last_table_start)
         else:
             start = end - SECTION_OVERLAP
@@ -236,9 +236,7 @@ def create_sections(filename, page_map):
         }
 
 def create_search_index(index):
-    if LOG_VERBOSE: logging.info(f"Ensuring search index {index} exists")
-    # index_client = SearchIndexClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
-    #                                  credential=search_creds)
+    logging.info(f"Ensuring search index {index} exists")
     if index not in index_client.list_index_names():
         index = SearchIndex(
             name=index,
@@ -255,16 +253,13 @@ def create_search_index(index):
                     prioritized_fields=PrioritizedFields(
                         title_field=None, prioritized_content_fields=[SemanticField(field_name='content')]))])
         )
-        if LOG_VERBOSE: logging.info(f"Creating {index} search index")
+        logging.info(f"Creating {index} search index")
         index_client.create_index(index)
     else:
-        if LOG_VERBOSE: logging.info(f"Search index {index} already exists")
+        logging.info(f"Search index {index} already exists")
 
 def index_sections(filename, sections, index):
-    if LOG_VERBOSE: logging.info(f"Indexing sections from '{filename}' into search index '{index}'")
-    # search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
-    #                                 index_name=index,
-    #                                 credential=search_creds)
+    logging.info(f"Indexing sections from '{filename}' into search index '{index}'")
     i = 0
     batch = []
     for s in sections:
@@ -273,26 +268,23 @@ def index_sections(filename, sections, index):
         if i % 1000 == 0:
             results = search_client.upload_documents(documents=batch)
             succeeded = sum([1 for r in results if r.succeeded])
-            if LOG_VERBOSE: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
+            logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
             batch = []
 
     if len(batch) > 0:
         results = search_client.upload_documents(documents=batch)
         succeeded = sum([1 for r in results if r.succeeded])
-        if LOG_VERBOSE: logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
+        logging.info(f"\tIndexed {len(results)} sections, {succeeded} succeeded")
 
-def remove_from_index(filename,index,search_creds):
-    if LOG_VERBOSE: logging.info(f"Removing sections from '{filename or '<all>'}' from search index '{index}'")
-    search_client = SearchClient(endpoint=f"https://{AZURE_SEARCH_SERVICE}.search.windows.net/",
-                                    index_name=index,
-                                    credential=search_creds)
+def remove_from_index(filename,index):
+    logging.info(f"Removing sections from '{filename or '<all>'}' from search index '{index}'")
     while True:
         filter = None if filename == None else f"sourcefile eq '{os.path.basename(filename)}'"
         r = search_client.search("", filter=filter, top=1000, include_total_count=True)
         if r.get_count() == 0:
             break
         r = search_client.delete_documents(documents=[{ "id": d["id"] } for d in r])
-        if LOG_VERBOSE: logging.info(f"\tRemoved {len(r)} sections from index")
+        logging.info(f"\tRemoved {len(r)} sections from index")
         # It can take a few seconds for search results to reflect changes, so wait a bit
         time.sleep(2)
 
