@@ -17,7 +17,7 @@ foreach ($tool in $tools) {
   }
 }
 
-az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+# az account set --subscription $env:AZURE_SUBSCRIPTION_ID
 
 cd ./app/frontend
 $SWA_DEPLOYMENT_TOKEN = az staticwebapp secrets list --name $env:AZURE_STATICWEBSITE_NAME --query "properties.apiKey" --output tsv
@@ -28,12 +28,12 @@ if ($SWA_DEPLOYMENT_TOKEN -ne "") {
 }
 
 cd ../backend
-$AZURE_SEARCH_KEY = az cognitiveservices account keys list --name $env:AZURE_SEARCH_SERVICE --resource-group $env:AZURE_RESOURCE_GROUP --query "key1" --output tsv
-if ($SWA_DEPLOYMENT_TOKEN -ne "") {
-  az functionapp config appsettings set --name $env:AZURE_FUNCTION_NAME --resource-group $env:AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
-} else {
-  Write-Host "AZURE_SEARCH_KEY is empty, not setting it. Go to Azure portal and set it manually."
-}
+# $AZURE_SEARCH_KEY = az cognitiveservices account keys list --name $env:AZURE_SEARCH_SERVICE --resource-group $env:AZURE_RESOURCE_GROUP --query "key1" --output tsv
+# if ($SWA_DEPLOYMENT_TOKEN -ne "") {
+#   az functionapp config appsettings set --name $env:AZURE_FUNCTION_NAME --resource-group $env:AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
+# } else {
+#   Write-Host "AZURE_SEARCH_KEY is empty, not setting it. Go to Azure portal and set it manually."
+# }
 func azure functionapp publish $env:AZURE_FUNCTION_NAME --python
 
 Write-Host "Deployment completed."

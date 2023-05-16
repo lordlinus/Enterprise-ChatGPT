@@ -19,7 +19,7 @@ for cmd in "${commands[@]}"; do
   fi
 done
 
-az account set --subscription $AZURE_SUBSCRIPTION_ID
+# az account set --subscription $AZURE_SUBSCRIPTION_ID
 
 cd ./app/frontend
 SWA_DEPLOYMENT_TOKEN=$(az staticwebapp secrets list --name $AZURE_STATICWEBSITE_NAME --query "properties.apiKey" --output tsv)
@@ -32,12 +32,12 @@ fi
 cd ../backend
 # AZURE_FORM_RECOGNIZER_KEY=$(az cognitiveservices account keys list --name $AZURE_FORMRECOGNIZER_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
 # AZURE_OPENAI_API_KEY=$(az cognitiveservices account keys list --name $AZURE_OPENAI_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
-AZURE_SEARCH_KEY=$(az cognitiveservices account keys list --name $AZURE_SEARCH_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
-if [[ -n $AZURE_SEARCH_KEY ]]; then
-  az functionapp config appsettings list --name $AZURE_FUNCTION_NAME --resource-group $AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
-else
-  echo "AZURE_SEARCH_KEY is empty, not setting it. Go to Azure portal and set it manually."
-fi
+# AZURE_SEARCH_KEY=$(az cognitiveservices account keys list --name $AZURE_SEARCH_SERVICE --resource-group $AZURE_RESOURCE_GROUP --query "key1" --output tsv)
+# if [[ -n $AZURE_SEARCH_KEY ]]; then
+#   az functionapp config appsettings list --name $AZURE_FUNCTION_NAME --resource-group $AZURE_RESOURCE_GROUP --settings AZURE_SEARCH_KEY=$AZURE_SEARCH_KEY
+# else
+#   echo "AZURE_SEARCH_KEY is empty, not setting it. Go to Azure portal and set it manually."
+# fi
 
 func azure functionapp publish $AZURE_FUNCTION_NAME --python
 
