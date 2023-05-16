@@ -30,6 +30,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Install dependent tools
+        run: |
+          npm install -g @azure/static-web-apps-cli
+
       - name: Log in with Azure (Client Credentials)
         if: ${{ env.AZURE_CREDENTIALS != '' }}
         run: |
