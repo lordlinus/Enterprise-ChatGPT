@@ -284,7 +284,7 @@ def llm_client(deployment_name, overrides):
             openai.api_key = aoai_endpoint['key']
             openai.api_version = "2023-03-15-preview"
 
-            llm = AzureOpenAI(deployment_name=deployment_name, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key, stop=["\n"]) # type: ignore
+            llm = AzureOpenAI(deployment_name=deployment_name, temperature=overrides.get("temperature") or 0.3, openai_api_key=openai.api_key) # type: ignore
         else:
             openai.api_type = "open_ai"
             openai.api_key = OPENAI_TOKEN
