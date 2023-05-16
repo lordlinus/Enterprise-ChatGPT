@@ -8,8 +8,6 @@ import time
 
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.identity import DefaultAzureCredential
-# from azure.search.documents import SearchClient
-# from azure.search.documents.indexes import SearchIndexClient
 from azure.search.documents.indexes.models import (PrioritizedFields,
                                                    SearchableField,
                                                    SearchIndex,
@@ -25,30 +23,6 @@ from .clients import (AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_KEY,AZURE_STORAGE_CON
 MAX_SECTION_LENGTH = 1000
 SENTENCE_SEARCH_LIMIT = 100
 SECTION_OVERLAP = 100
-
-# AZURE_STORAGE_ACCOUNT = os.environ.get("AZURE_STORAGE_ACCOUNT")
-# container = os.environ.get("AZURE_STORAGE_CONTAINER")
-# AZURE_SEARCH_SERVICE = os.environ.get("AZURE_SEARCH_SERVICE")
-# searchkey = os.environ.get("AZURE_SEARCH_KEY")
-# index = os.environ.get("AZURE_SEARCH_INDEX")
-# AZURE_STORAGE_KEY = os.environ.get("AZURE_STORAGE_KEY")
-# AZURE_FORM_RECOGNIZER_SERVICE = os.environ.get("AZURE_FORM_RECOGNIZER_SERVICE")
-# formrecognizerkey = os.environ.get("AZURE_FORM_RECOGNIZER_KEY")
-# tenantid = os.environ.get("AZURE_TENANT_ID")
-
-# # optional environment variables
-# localpdfparser = os.environ.get("LOCAL_PDF_PARSER_BOOL") or False
-# LOG_VERBOSE = os.environ.get("LOG_VERBOSE_BOOL") or True
-# category = os.environ.get("CATEGORY") or "default"
-
-# # Use the current user identity to connect to Azure services unless a key is explicitly set for any of them
-# azd_credential = DefaultAzureCredential()
-# # azd_credential = AzureDeveloperCliCredential() if tenantid == None else AzureDeveloperCliCredential(tenant_id=tenantid)
-# default_creds = azd_credential if searchkey == None or AZURE_STORAGE_KEY == None else None
-# search_creds = default_creds if searchkey == None else AzureKeyCredential(searchkey)
-# # storage_creds = default_creds if AZURE_STORAGE_KEY == None else AzureKeyCredential(AZURE_STORAGE_KEY)
-# formrecognizer_creds = default_creds if formrecognizerkey == None else AzureKeyCredential(formrecognizerkey)
-# # logging.info(f"Using credentials: {search_creds}, {storage_creds}, {formrecognizer_creds}")
 
 def blob_name_from_file_page(filename, page = 0):
     if os.path.splitext(filename)[1].lower() == ".pdf":
@@ -122,49 +96,49 @@ def get_document_text(filename):
     offset = 0
     page_map = []
     # Skip local PDF parsing for now
-    # if LOCAL_PDF_PARSER_BOOL:
-    #     reader = PdfReader(filename)
-    #     pages = reader.pages
-    #     for page_num, p in enumerate(pages):
-    #         page_text = p.extract_text()
-    #         page_map.append((page_num, offset, page_text))
-    #         offset += len(page_text)
-    # else:
-    logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
-    form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{AZURE_FORM_RECOGNIZER_SERVICE}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"}) # type: ignore
-    with open(filename, "rb") as f:
-        poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
-    form_recognizer_results = poller.result()
+    if LOCAL_PDF_PARSER_BOOL:
+        reader = PdfReader(filename)
+        pages = reader.pages
+        for page_num, p in enumerate(pages):
+            page_text = p.extract_text()
+            page_map.append((page_num, offset, page_text))
+            offset += len(page_text)
+    else:
+        logging.info(f"Extracting text from '{filename}' using Azure Form Recognizer")
+        form_recognizer_client = DocumentAnalysisClient(endpoint=f"https://{AZURE_FORM_RECOGNIZER_SERVICE}.cognitiveservices.azure.com/", credential=formrecognizer_creds, headers={"x-ms-useragent": "azure-search-chat-demo/1.0.0"}) # type: ignore
+        with open(filename, "rb") as f:
+            poller = form_recognizer_client.begin_analyze_document("prebuilt-layout", document = f)
+        form_recognizer_results = poller.result()
 
-    for page_num, page in enumerate(form_recognizer_results.pages):
-        tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1] # type: ignore
+        for page_num, page in enumerate(form_recognizer_results.pages):
+            tables_on_page = [table for table in form_recognizer_results.tables if table.bounding_regions[0].page_number == page_num + 1] # type: ignore
 
-        # mark all positions of the table spans in the page
-        page_offset = page.spans[0].offset
-        page_length = page.spans[0].length
-        table_chars = [-1]*page_length
-        for table_id, table in enumerate(tables_on_page):
-            for span in table.spans:
-                # replace all table spans with "table_id" in table_chars array
-                for i in range(span.length):
-                    idx = span.offset - page_offset + i
-                    if idx >=0 and idx < page_length:
-                        table_chars[idx] = table_id
+            # mark all positions of the table spans in the page
+            page_offset = page.spans[0].offset
+            page_length = page.spans[0].length
+            table_chars = [-1]*page_length
+            for table_id, table in enumerate(tables_on_page):
+                for span in table.spans:
+                    # replace all table spans with "table_id" in table_chars array
+                    for i in range(span.length):
+                        idx = span.offset - page_offset + i
+                        if idx >=0 and idx < page_length:
+                            table_chars[idx] = table_id
 
-        # build page text by replacing charcters in table spans with table html
-        page_text = ""
-        added_tables = set()
-        for idx, table_id in enumerate(table_chars):
-            if table_id == -1:
-                page_text += form_recognizer_results.content[page_offset + idx]
-            elif not table_id in added_tables:
-                page_text += table_to_html(tables_on_page[table_id])
-                added_tables.add(table_id)
+            # build page text by replacing charcters in table spans with table html
+            page_text = ""
+            added_tables = set()
+            for idx, table_id in enumerate(table_chars):
+                if table_id == -1:
+                    page_text += form_recognizer_results.content[page_offset + idx]
+                elif not table_id in added_tables:
+                    page_text += table_to_html(tables_on_page[table_id])
+                    added_tables.add(table_id)
 
-        page_text += " "
-        page_map.append((page_num, offset, page_text))
-        offset += len(page_text)
-    # logging.info(page_map)
+            page_text += " "
+            page_map.append((page_num, offset, page_text))
+            offset += len(page_text)
+    logging.info(page_map)
     return page_map
 
 def split_text(page_map):
