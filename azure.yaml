@@ -18,11 +18,11 @@ hooks:
     predeploy:
       windows:
         shell: pwsh
-        run:  cd ./app/frontend;npm install;npm run build
+        run:  cd ./app/frontend;npm install;npm run build && cd ../backend;func azure functionapp publish $AZURE_FUNCTION_NAME --python
         interactive: true
         continueOnError: false
       posix:
         shell: sh
-        run:  cd ./app/frontend;npm install;npm run build
+        run:  cd ./app/frontend;npm install;npm run build && cd ../backend;func azure functionapp publish $AZURE_FUNCTION_NAME --python
         interactive: true
         continueOnError: false

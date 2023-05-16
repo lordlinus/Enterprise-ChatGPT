@@ -23,7 +23,7 @@ resource account 'Microsoft.CognitiveServices/accounts@2022-12-01' = {
 }
 
 @batchSize(1)
-resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2022-10-01' = [for deployment in deployments: {
+resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2022-12-01' = [for deployment in deployments: {
   parent: account
   name: deployment.name
   properties: {
