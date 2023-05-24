@@ -30,8 +30,9 @@ param openAiServiceName string = ''
 param openAiResourceGroupName string = ''
 
 // OpenAI is only available in these regions
+// aligned with region location parameter
 @allowed([ 'eastus', 'southcentralus', 'westeurope' ])
-param openAiResourceGroupLocation string = 'eastus'
+param openAiResourceGroupLocation string = location
 
 param openAiSkuName string = 'S0'
 
@@ -196,13 +197,13 @@ module function 'core/host/azfunctions.bicep' = {
     azureOpenaiChatgptDeployment: chatGptDeploymentName
     azureOpenaigptDeployment: gptDeploymentName
     azureOpenaiService: openAi.outputs.name
-    azureOpenaiServiceKey: ''
+    //azureOpenaiServiceKey: ''
     azureSearchIndex: searchIndexName
     azureSearchService: searchService.outputs.name
-    azureSearchServiceKey: ''
+    //azureSearchServiceKey: ''
     azureStorageContainerName: storageContainerName
     formRecognizerService: formRecognizer.outputs.name
-    formRecognizerServiceKey: ''
+    //formRecognizerServiceKey: ''
     runtimeName: 'python'
     runtimeVersion: '3.10'
   }

@@ -7,13 +7,13 @@ param tags object = {}
 // param applicationInsightsName string = ''
 param appServicePlanId string
 param formRecognizerService string
-param formRecognizerServiceKey string
+//param formRecognizerServiceKey string
 param azureOpenaiService string
-param azureOpenaiServiceKey string
+//param azureOpenaiServiceKey string
 param azureOpenaiChatgptDeployment string
 param azureOpenaigptDeployment string
 param azureSearchService string
-param azureSearchServiceKey string
+//param azureSearchServiceKey string
 param azureSearchIndex string
 param azureStorageContainerName string
 
@@ -55,6 +55,17 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2022-05-01' = {
     supportsHttpsTrafficOnly: true
     defaultToOAuthAuthentication: true
   }
+}
+
+resource formRecognizerAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
+  name : formRecognizerService
+}
+resource azureOpenAiServiceAccount 'Microsoft.CognitiveServices/accounts@2022-12-01' existing = {
+  name : azureOpenaiService
+}
+
+resource azureSearchServiceAccount 'Microsoft.Search/searchServices@2022-09-01' existing = {
+  name : azureSearchService
 }
 
 resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
@@ -107,15 +118,43 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
         {
           name: 'AZURE_FORM_RECOGNIZER_SERVICE'
-          value: formRecognizerService
+          value: formRecognizerAccount.name
         }
         {
           name: 'AZURE_FORM_RECOGNIZER_KEY'
-          value: formRecognizerServiceKey
+          value: formRecognizerAccount.listKeys().key1
         }
         {
           name: 'AZURE_OPENAI_SERVICE'
-          value: azureOpenaiService
+          value: azureOpenAiServiceAccount.name
+        }
+        {
+          name: 'AZURE_OPENAI_API_KEY'
+          value: azureOpenAiServiceAccount.listKeys().key1
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_1'
+          value: azureOpenAiServiceAccount.name
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_1_KEY'
+          value: azureOpenAiServiceAccount.listKeys().key1
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_2'
+          value: azureOpenAiServiceAccount.name
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_2_KEY'
+          value: azureOpenAiServiceAccount.listKeys().key1
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_3'
+          value: azureOpenAiServiceAccount.name
+        }
+        {
+          name: 'AZURE_OPENAI_SERVICE_3_KEY'
+          value: azureOpenAiServiceAccount.listKeys().key1
         }
         {
           name: 'AZURE_OPENAI_CHATGPT_DEPLOYMENT'
@@ -131,15 +170,11 @@ resource functionApp 'Microsoft.Web/sites@2021-03-01' = {
         }
         {
           name: 'AZURE_SEARCH_KEY'
-          value: azureSearchServiceKey
+          value: azureSearchServiceAccount.listAdminKeys().primaryKey
         }
         {
           name: 'AZURE_SEARCH_INDEX'
           value: azureSearchIndex
-        }
-        {
-          name: 'AZURE_OPENAI_API_KEY'
-          value: azureOpenaiServiceKey
         }
         {
           name: 'AZURE_STORAGE_CONTAINER'
