@@ -75,7 +75,7 @@ AZURE_OPENAI_GPT4_SERVICE_1_KEY = os.environ.get("AZURE_OPENAI_GPT4_SERVICE_1_KE
 AZURE_OPENAI_GPT4_DEPLOYMENT = os.environ.get("AZURE_OPENAI_GPT4_DEPLOYMENT") or "gpt4"
 
 OPENAI_TOKEN = os.environ.get("OPENAI_TOKEN") or ""
-OPENAI_TOKEN = os.environ.get("OPENAI_TOKEN") or ""
+# OPENAI_TOKEN = os.environ.get("OPENAI_TOKEN") or "" -- duplicate
 # The default category to use if none is specified
 AZURE_OPENAI_DEFAULT_TEMP = os.environ.get("AZURE_OPENAI_DEFAULT_TEMP") or 0.1
 AZURE_OPENAI_DEFAULT_TEMP = os.environ.get("AZURE_OPENAI_DEFAULT_TEMP") or 0.1

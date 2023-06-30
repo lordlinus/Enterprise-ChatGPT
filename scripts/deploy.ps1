@@ -1,9 +1,12 @@
 $output = azd env get-values
 
 foreach ($line in $output) {
-    $name = $line.Split('=')[0]
-    $value = $line.Split('=')[1].Trim('"')
-    Set-Item -Path "env:\$name" -Value $value
+    if (!($line)){
+      break
+    }
+      $name = $line.Split('=')[0]
+      $value = $line.Split('=')[1].Trim('"')
+      Set-Item -Path "env:\$name" -Value $value
 }
 
 Write-Host "Environment variables set."
@@ -18,6 +21,7 @@ foreach ($tool in $tools) {
 }
 
 # az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+Write-Host $env:AZURE_SUBSCRIPTION_ID
 
 cd ./app/frontend
 $SWA_DEPLOYMENT_TOKEN = az staticwebapp secrets list --name $env:AZURE_STATICWEBSITE_NAME --query "properties.apiKey" --output tsv
