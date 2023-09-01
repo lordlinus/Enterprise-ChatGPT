@@ -6,7 +6,7 @@ azure-functions
 openai==0.26.4
 azure-identity==1.13.0b3
 Flask==2.2.5
-langchain==0.0.78
+langchain==0.0.246
 azure-search-documents==11.4.0b3
 azure-storage-blob==12.14.1
 azure-ai-formrecognizer==3.2.1
